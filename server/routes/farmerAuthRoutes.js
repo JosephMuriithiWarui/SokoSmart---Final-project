@@ -55,7 +55,8 @@ router.post('/login', async (req, res) => {
 
         // Generate token
         const token = jwt.sign({ 
-            id: farmer._id }, 
+            id: farmer._id,
+            role: 'farmer' }, 
             process.env.JWT_SECRET, 
             { expiresIn: '1h' }
         );

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "checkJs": true,
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "typeRoots": ["./@types", "./node_modules/@types"],
+    "paths": {
+      "*": ["*", "node_modules/*"]
+    }
+  },
+  "include": ["**/*.js", "@types/**/*.d.ts"],
+  "typeAcquisition": { "enable": true },
+  "exclude": ["node_modules"]
+}
+
