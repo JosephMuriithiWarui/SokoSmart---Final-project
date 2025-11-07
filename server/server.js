@@ -1,5 +1,6 @@
 const express = require('express');
 const connectDB = require('./config/db');
+const farmerAuthRoutes = require('./routes/farmerAuthRoutes')
 const farmerRoutes = require('./routes/farmerRoutes');
 const buyerRoutes = require('./routes/buyerRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 app.use(express.json());
+app.use('/api/farmers/auth', farmerAuthRoutes);
 app.use('/api/farmers', farmerRoutes);
 app.use('/api/buyers', buyerRoutes);
 app.use('/api/products', productRoutes);

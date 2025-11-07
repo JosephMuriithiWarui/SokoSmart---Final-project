@@ -1,5 +1,6 @@
 const express = require('express');
 const Product = require('../models/productModel');
+const auth = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -40,9 +41,16 @@ router.put('/:id', async (req, res) => {
 });
 
 // Create a product
-router.post('/', async (req, res) => {
-    const { name, price, quantity, farmerId } = req.body;
-    const product = new Product({ name, price, quantity, farmerId });
+router.post('/', auth, async (req, res) => {
+    const { name, price, category, quantity, farmerId } = req.body;
+
+    //  // The logged-in farmer's ID is available as req.user.id
+    const product = new Product({ 
+        name, 
+        price, 
+        category,
+        quantity, 
+        farmer: req.user.id });
     try {
         await product.save();
         res.status(201).json(product);
