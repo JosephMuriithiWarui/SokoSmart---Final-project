@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const connectDB = require('./config/db');
 const farmerAuthRoutes = require('./routes/farmerAuthRoutes')
 const farmerRoutes = require('./routes/farmerRoutes');
@@ -11,6 +12,9 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
+app.use(cors({
+    origin: 'http://localhost:5173' // or your production URL
+  }));
 app.use(express.json());
 app.use('/api/farmers/auth', farmerAuthRoutes);
 app.use('/api/farmers', farmerRoutes);

@@ -109,4 +109,36 @@ router.put('/:id/status', protect(['farmer']), async (req, res) => {
   }
 });
 
+// Buyer: Cancel/Delete their own order
+router.delete('/:id', protect(['buyer']), async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Ensure buyer owns the order
+    if (order.buyer.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to cancel this order' });
+    }
+
+    // Only allow canceling pending orders
+    if (order.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending orders can be cancelled' });
+    }
+
+    // Restore product quantity
+    const product = await Product.findById(order.product);
+    if (product) {
+      product.quantity += order.quantity;
+      await product.save();
+    }
+
+    // Delete the order
+    await order.deleteOne();
+
+    res.status(200).json({ message: 'Order cancelled successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

@@ -1,9 +1,18 @@
-const App = () => {
-  
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import FarmerDashboard from "./pages/FarmerDashboard";
+import BuyerDashboard from "./pages/BuyerDashboard";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
+export default function App() {
   return (
-    <h1 className="text-green text-lg font-bold">Soko Smart</h1>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/farmer" element={<FarmerDashboard />} />
+        <Route path="/buyer" element={<BuyerDashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App
