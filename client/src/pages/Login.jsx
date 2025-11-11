@@ -1,10 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../components/Notification.jsx";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const navigate = useNavigate();
+  const [selectedRole, setSelectedRole] = useState(null);
+  const { showNotification } = useNotification();
+
+  useEffect(() => {
+    // Read and clear selected role
+    const role = localStorage.getItem("selectedRole");
+    if (role) {
+      setSelectedRole(role);
+      localStorage.removeItem("selectedRole");
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +38,7 @@ export default function Login() {
         localStorage.setItem("token", res.data.token);
       }
 
-      alert("✅ Login successful!");
+      showNotification("Login successful!", "success");
       
       // Redirect based on role
       if (role === "farmer") {
@@ -36,48 +48,60 @@ export default function Login() {
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Login failed";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 shadow rounded w-80"
-      >
-        <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 mb-3 w-full rounded"
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="border p-2 mb-3 w-full rounded"
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-        />
-        <button
-          type="submit"
-          className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700"
-        >
-          Login
-        </button>
-        <p className="text-sm text-center mt-3">
-          Don’t have an account?{" "}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-[#eaf2ed]">
+      <div className="bg-white p-8 shadow-2xl rounded-2xl w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">Login</h2>
+        {selectedRole && (
+          <p className="text-center text-sm text-gray-600 mb-4">
+            Continue as {selectedRole === "farmer" ? "Farmer/Seller" : "Buyer"}
+          </p>
+        )}
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            className="border-2 border-gray-200 p-3 mb-4 w-full rounded-lg focus:outline-none focus:border-green-500 transition"
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="border-2 border-gray-200 p-3 mb-4 w-full rounded-lg focus:outline-none focus:border-green-500 transition"
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+          />
+          <button
+            type="submit"
+            className="bg-[#31694E] text-white w-full py-3 rounded-lg hover:bg-[#2a5a42] transition font-semibold text-lg"
+          >
+            Login
+          </button>
+        </form>
+        <p className="text-sm text-center mt-4 text-gray-600">
+          Don't have an account?{" "}
           <span
             onClick={() => navigate("/signup")}
-            className="text-green-600 cursor-pointer"
+            className="text-[#31694E] cursor-pointer hover:text-[#2a5a42] font-semibold"
           >
             Sign up
           </span>
         </p>
-      </form>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => navigate("/")}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            ← Back to Home
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

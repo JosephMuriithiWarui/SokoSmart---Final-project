@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import Loader from "../components/Loader";
+import Modal from "../components/Modal.jsx";
+import { useNotification } from "../components/Notification.jsx";
 
 export default function FarmerDashboard() {
   const [products, setProducts] = useState([]);
@@ -9,12 +11,15 @@ export default function FarmerDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showOrders, setShowOrders] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     price: "",
     category: "",
     quantity: "",
   });
+  const { showNotification } = useNotification();
 
   // Load farmer's products
   useEffect(() => {
@@ -40,7 +45,7 @@ export default function FarmerDashboard() {
       setProducts(farmerProducts);
     } catch (err) {
       console.error("Error fetching products:", err);
-      alert("Failed to load products. Please try again.");
+      showNotification("Failed to load products. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -50,7 +55,7 @@ export default function FarmerDashboard() {
   const fetchOrders = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first");
+      showNotification("Please login first", "warning");
       return;
     }
 
@@ -58,11 +63,11 @@ export default function FarmerDashboard() {
     try {
       const decodedToken = JSON.parse(atob(token.split(".")[1]));
       if (decodedToken.role !== "farmer") {
-        alert("You must be logged in as a farmer to view orders");
+        showNotification("You must be logged in as a farmer to view orders", "warning");
         return;
       }
     } catch {
-      alert("Invalid token. Please login again.");
+      showNotification("Invalid token. Please login again.", "error");
       return;
     }
 
@@ -76,9 +81,9 @@ export default function FarmerDashboard() {
       const errorMessage = err.response?.data?.message || err.message || "Failed to load orders";
       
       if (status === 401 || status === 403) {
-        alert("Access denied. Please make sure you're logged in as a farmer.");
+        showNotification("Access denied. Please make sure you're logged in as a farmer.", "error");
       } else {
-        alert(`Error: ${errorMessage}`);
+        showNotification(errorMessage, "error");
       }
     } finally {
       setOrdersLoading(false);
@@ -90,7 +95,7 @@ export default function FarmerDashboard() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first");
+      showNotification("Please login first", "warning");
       return;
     }
 
@@ -104,7 +109,7 @@ export default function FarmerDashboard() {
           quantity: Number(form.quantity),
         });
         setProducts(products.map(p => p._id === editingProduct._id ? res.data : p));
-        alert("✅ Product updated successfully!");
+        showNotification("Product updated successfully!", "success");
       } else {
         // Create product
         const res = await api.post("/products", {
@@ -113,13 +118,14 @@ export default function FarmerDashboard() {
           quantity: Number(form.quantity),
         });
         setProducts([...products, res.data]);
-        alert("✅ Product added successfully!");
+        showNotification("Product added successfully!", "success");
       }
       setForm({ name: "", price: "", category: "", quantity: "" });
       setEditingProduct(null);
+      setIsProductModalOpen(false);
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Error saving product";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -135,23 +141,20 @@ export default function FarmerDashboard() {
       category: product.category,
       quantity: product.quantity,
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsProductModalOpen(true);
   };
 
   // Delete product
   const handleDelete = async (productId) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) {
-      return;
-    }
 
     try {
       setLoading(true);
       await api.delete(`/products/${productId}`);
       setProducts(products.filter(p => p._id !== productId));
-      alert("✅ Product deleted successfully!");
+      showNotification("Product deleted successfully!", "success");
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Error deleting product";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -164,9 +167,9 @@ export default function FarmerDashboard() {
       setOrdersLoading(true);
       await api.put(`/orders/${orderId}/status`, { status });
       setOrders(orders.map(o => o._id === orderId ? { ...o, status } : o));
-      alert("✅ Order status updated!");
+      showNotification("Order status updated!", "success");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update order status");
+      showNotification(err.response?.data?.message || "Failed to update order status", "error");
       console.error(err);
     } finally {
       setOrdersLoading(false);
@@ -176,7 +179,7 @@ export default function FarmerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-green-700 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#31694E] mb-6">
           Farmer Dashboard 🌾
         </h1>
 
@@ -186,7 +189,7 @@ export default function FarmerDashboard() {
             onClick={() => setShowOrders(false)}
             className={`px-4 py-2 font-semibold ${
               !showOrders
-                ? "text-green-600 border-b-2 border-green-600"
+                ? "text-[#31694E] border-b-2 border-[#31694E]"
                 : "text-gray-500"
             }`}
           >
@@ -199,7 +202,7 @@ export default function FarmerDashboard() {
             }}
             className={`px-4 py-2 font-semibold ${
               showOrders
-                ? "text-green-600 border-b-2 border-green-600"
+                ? "text-[#31694E] border-b-2 border-[#31694E]"
                 : "text-gray-500"
             }`}
           >
@@ -209,68 +212,76 @@ export default function FarmerDashboard() {
 
         {!showOrders ? (
           <>
-            {/* Add/Edit Product Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white shadow-md rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 max-w-md"
+            <div className="mb-6">
+              <button
+                onClick={() => {
+                  setEditingProduct(null);
+                  setForm({ name: "", price: "", category: "", quantity: "" });
+                  setIsProductModalOpen(true);
+                }}
+                className="bg-[#31694E] text-white px-4 py-2 rounded hover:bg-[#2a5a42]"
+              >
+                + Add New Product
+              </button>
+            </div>
+
+            <Modal
+              isOpen={isProductModalOpen}
+              onClose={() => setIsProductModalOpen(false)}
+              title={editingProduct ? "Edit Product" : "Add New Product"}
+              size="md"
             >
-              <h2 className="text-xl font-semibold mb-4">
-                {editingProduct ? "Edit Product" : "Add New Product"}
-              </h2>
-              <input
-                type="text"
-                placeholder="Product Name"
-                className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Price (KSh)"
-                className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Category"
-                className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Quantity"
-                className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                required
-              />
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 flex-1"
-                >
-                  {loading ? "Saving..." : editingProduct ? "Update" : "Add Product"}
-                </button>
-                {editingProduct && (
+              <form onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  placeholder="Product Name"
+                  className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-[#31694E]"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Price (KSh)"
+                  className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-[#31694E]"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Category"
+                  className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-[#31694E]"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  className="border p-2 mb-3 w-full rounded focus:outline-none focus:ring-2 focus:ring-[#31694E]"
+                  value={form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                  required
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-[#31694E] text-white px-4 py-2 rounded hover:bg-[#2a5a42] disabled:opacity-50 flex-1"
+                  >
+                    {loading ? "Saving..." : editingProduct ? "Update" : "Add Product"}
+                  </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditingProduct(null);
-                      setForm({ name: "", price: "", category: "", quantity: "" });
-                    }}
+                    onClick={() => setIsProductModalOpen(false)}
                     className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
                   >
                     Cancel
                   </button>
-                )}
-              </div>
-            </form>
+                </div>
+              </form>
+            </Modal>
 
             {/* Product List */}
             <h2 className="text-xl sm:text-2xl font-semibold mb-3">My Products</h2>
@@ -290,12 +301,12 @@ export default function FarmerDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(p)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 flex-1"
+                        className="bg-[#31694E] text-white px-3 py-1 rounded text-sm hover:bg-[#2a5a42] flex-1"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(p._id)}
+                        onClick={() => setDeleteProductId(p._id)}
                         className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 flex-1"
                       >
                         Delete
@@ -307,6 +318,33 @@ export default function FarmerDashboard() {
             ) : (
               <p className="text-gray-600">No products yet.</p>
             )}
+
+            <Modal
+              isOpen={!!deleteProductId}
+              onClose={() => setDeleteProductId(null)}
+              title="Confirm Delete"
+              size="sm"
+            >
+              <p className="mb-6">Are you sure you want to delete this product?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const id = deleteProductId;
+                    setDeleteProductId(null);
+                    handleDelete(id);
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex-1"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setDeleteProductId(null)}
+                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </Modal>
           </>
         ) : (
           <>

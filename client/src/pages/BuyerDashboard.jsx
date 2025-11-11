@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import Loader from "../components/Loader";
+import Modal from "../components/Modal.jsx";
+import { useNotification } from "../components/Notification.jsx";
 
 export default function BuyerDashboard() {
   const [products, setProducts] = useState([]);
@@ -9,6 +11,9 @@ export default function BuyerDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
   const [orderForm, setOrderForm] = useState({ productId: "", quantity: 1 });
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState(null);
+  const { showNotification } = useNotification();
 
   // Load all products
   useEffect(() => {
@@ -23,7 +28,7 @@ export default function BuyerDashboard() {
       setProducts(res.data);
     } catch (err) {
       console.error("Error loading products:", err);
-      alert("Failed to fetch products");
+      showNotification("Failed to fetch products", "error");
     } finally {
       setLoading(false);
     }
@@ -45,19 +50,20 @@ export default function BuyerDashboard() {
   const placeOrder = async (productId, quantity = 1) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first");
+      showNotification("Please login first", "warning");
       return;
     }
 
     try {
       setLoading(true);
       await api.post("/orders", { productId, quantity });
-      alert("✅ Order placed successfully!");
+      showNotification("Order placed successfully!", "success");
       await fetchOrders();
       await fetchProducts(); // Refresh to update stock
+      setIsOrderModalOpen(false);
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Failed to place order";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -66,21 +72,18 @@ export default function BuyerDashboard() {
 
   // Cancel order
   const cancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) {
-      return;
-    }
 
     try {
       setOrdersLoading(true);
       await api.delete(`/orders/${orderId}`);
-      alert("✅ Order cancelled successfully!");
+      showNotification("Order cancelled successfully!", "success");
       // Refresh orders list
       await fetchOrders();
       // Refresh products to update stock
       await fetchProducts();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Failed to cancel order";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     } finally {
       setOrdersLoading(false);
@@ -90,7 +93,7 @@ export default function BuyerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#31694E] mb-6">
           Buyer Dashboard 🛒
         </h1>
 
@@ -100,7 +103,7 @@ export default function BuyerDashboard() {
             onClick={() => setShowOrders(false)}
             className={`px-4 py-2 font-semibold ${
               !showOrders
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[#31694E] border-b-2 border-[#31694E]"
                 : "text-gray-500"
             }`}
           >
@@ -110,7 +113,7 @@ export default function BuyerDashboard() {
             onClick={() => setShowOrders(true)}
             className={`px-4 py-2 font-semibold ${
               showOrders
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[#31694E] border-b-2 border-[#31694E]"
                 : "text-gray-500"
             }`}
           >
@@ -140,23 +143,13 @@ export default function BuyerDashboard() {
                       Stock: {p.quantity} available
                     </p>
                     <div className="flex gap-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max={p.quantity}
-                        value={orderForm.productId === p._id ? orderForm.quantity : 1}
-                        onChange={(e) =>
-                          setOrderForm({
-                            productId: p._id,
-                            quantity: parseInt(e.target.value) || 1,
-                          })
-                        }
-                        className="border p-2 rounded w-20 text-sm"
-                      />
                       <button
-                        onClick={() => placeOrder(p._id, orderForm.productId === p._id ? orderForm.quantity : 1)}
+                        onClick={() => {
+                          setOrderForm({ productId: p._id, quantity: 1 });
+                          setIsOrderModalOpen(true);
+                        }}
                         disabled={loading || p.quantity === 0}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-1 text-sm sm:text-base"
+                        className="bg-[#31694E] text-white px-4 py-2 rounded hover:bg-[#2a5a42] disabled:opacity-50 disabled:cursor-not-allowed flex-1 text-sm sm:text-base"
                       >
                         {loading ? "Ordering..." : "Order Now"}
                       </button>
@@ -206,7 +199,7 @@ export default function BuyerDashboard() {
                         </span>
                         {order.status === "pending" && (
                           <button
-                            onClick={() => cancelOrder(order._id)}
+                            onClick={() => setCancelOrderId(order._id)}
                             className="bg-red-500 text-white px-4 py-2 rounded text-sm hover:bg-red-600"
                           >
                             Cancel Order
@@ -223,6 +216,62 @@ export default function BuyerDashboard() {
           </>
         )}
       </div>
+
+      {/* Place Order Modal */}
+      <Modal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        title="Place Order"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">Quantity</label>
+          <input
+            type="number"
+            min="1"
+            value={orderForm.quantity}
+            onChange={(e) =>
+              setOrderForm({ ...orderForm, quantity: parseInt(e.target.value) || 1 })
+            }
+            className="border p-2 rounded w-full"
+          />
+          <button
+            onClick={() => placeOrder(orderForm.productId, orderForm.quantity)}
+            className="bg-[#31694E] text-white px-4 py-2 rounded hover:bg-[#2a5a42] w-full"
+            disabled={loading}
+          >
+            {loading ? "Placing..." : "Confirm Order"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Cancel Order Confirmation Modal */}
+      <Modal
+        isOpen={!!cancelOrderId}
+        onClose={() => setCancelOrderId(null)}
+        title="Cancel Order"
+        size="sm"
+      >
+        <p className="mb-6">Are you sure you want to cancel this order?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const id = cancelOrderId;
+              setCancelOrderId(null);
+              cancelOrder(id);
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex-1"
+          >
+            Yes, Cancel
+          </button>
+          <button
+            onClick={() => setCancelOrderId(null)}
+            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 flex-1"
+          >
+            Keep Order
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

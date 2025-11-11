@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../components/Notification.jsx";
 
 export default function Signup() {
   const [form, setForm] = useState({
@@ -12,6 +13,7 @@ export default function Signup() {
     role: "buyer",
   });
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,17 +43,17 @@ export default function Signup() {
       }
 
       await api.post(endpoint, payload);
-      alert("✅ Signup successful! You can now log in.");
+      showNotification("Signup successful! You can now log in.", "success");
       navigate("/login");
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Signup failed";
-      alert(errorMessage);
+      showNotification(errorMessage, "error");
       console.error(err);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-[#eaf2ed]">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 shadow rounded w-80"
@@ -109,7 +111,7 @@ export default function Signup() {
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+          className="bg-[#31694E] text-white w-full py-2 rounded hover:bg-[#2a5a42]"
         >
           Sign Up
         </button>
