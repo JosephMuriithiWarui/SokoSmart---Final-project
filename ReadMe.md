@@ -17,36 +17,35 @@ A MERN-stack marketplace that connects farmers and buyers. Farmers list products
 ## Folder Structure
 ```
 SokoSmart---Final-project/
-├─ client/                     # React frontend (Vite)
-│  ├─ index.html               # App HTML entry
-│  ├─ package.json             # Frontend scripts and deps
+├─ client/                    
+│  ├─ index.html               
+│  ├─ package.json            
 │  ├─ public/
-│  │  └─ (static assets served at /)
 │  └─ src/
-│     ├─ main.jsx              # React root
-│     ├─ App.jsx               # Routes setup
-│     ├─ components/           # Reusable UI (Loader, Modal, Notification, ...)
-│     ├─ pages/                # Pages (BuyerDashboard, FarmerDashboard, ...)
+│     ├─ main.jsx              
+│     ├─ App.jsx               
+│     ├─ components/           
+│     ├─ pages/                
 │     ├─ services/
-│     │  └─ api.js             # Axios instance (baseURL to server)
+│     │  └─ api.js             
 │     └─ assets/
 │        └─ images/
-│           └─ logo.png        # App logo
+│           └─ logo.png        
 │
-└─ server/                     # Express backend
-   ├─ server.js                # App entry
-   ├─ package.json             # Backend scripts and deps
-   ├─ .env                     # Environment variables (local only)
+└─ server/                     
+   ├─ server.js               
+   ├─ package.json             
+   ├─ .env                     
    ├─ models/
    │  ├─ buyerModel.js
    │  ├─ farmerModel.js
    │  └─ productModel.js
    ├─ routes/
-   │  ├─ productRoutes.js      # GET /api/products, etc.
-   │  ├─ farmerRoutes.js       # CRUD routes for farmers
-   │  └─ (orders routes)       # Place, list my orders, cancel
+   │  ├─ productRoutes.js      
+   │  ├─ farmerRoutes.js       
+   │  └─ (orders routes)       
    └─ middleware/
-      └─ authMiddleware.js     # protect() roles and JWT handling
+      └─ authMiddleware.js     
 ```
 
 ## Getting Started
@@ -73,12 +72,6 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_secret
 ```
-
-Frontend base URL is in `client/src/services/api.js`:
-```
-baseURL: "http://localhost:5000/api"
-```
-If your server runs elsewhere, update this value (or refactor to use `import.meta.env.VITE_API_BASE_URL`).
 
 ### 3) Run in development
 - Start the server:
@@ -136,7 +129,6 @@ Authentication uses Bearer tokens: `Authorization: Bearer <token>`.
 
 ## UI Notes
 - Buyer product cards show farmer name, phone, location, and stock.
--
 ## Contributing
 - Use feature branches and small focused commits
 - Run linters and ensure build passes
