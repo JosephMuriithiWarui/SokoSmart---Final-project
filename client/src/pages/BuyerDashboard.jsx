@@ -139,6 +139,9 @@ export default function BuyerDashboard() {
                     <p className="text-sm text-gray-400 mb-2">
                       Farmer: {p.farmer?.name || "Unknown"}
                     </p>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Phone: {p.farmer?.phone || "N/A"}
+                    </p>
                     <p className="text-sm text-gray-500 mb-4">
                       Stock: {p.quantity} available
                     </p>

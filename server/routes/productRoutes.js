@@ -8,7 +8,7 @@ const router = express.Router();
 // ✅ Public: View all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().populate('farmer', 'name location');
+    const products = await Product.find().populate('farmer', 'name location phone');
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
