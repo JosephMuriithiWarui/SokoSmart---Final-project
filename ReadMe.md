@@ -98,6 +98,9 @@ cd server
 npm start
 ```
 
+## Live Demo 
+https://sokosmart.vercel.app/
+
 ## Scripts
 ### Client (Vite)
 - `npm run dev` — start dev server
