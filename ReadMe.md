@@ -130,6 +130,9 @@ https://sokosmart.vercel.app/
 
 Authentication uses Bearer tokens: `Authorization: Bearer <token>`.
 
+## Live Demo 
+https://sokosmart.vercel.app/
+
 ## UI Notes
 - Buyer product cards show farmer name, phone, location, and stock.
 ## Contributing
